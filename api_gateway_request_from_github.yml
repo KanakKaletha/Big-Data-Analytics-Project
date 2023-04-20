@@ -1,0 +1,17 @@
+name: API Gateway Request
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  api-gateway-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send API Gateway request
+        run: |
+          curl -i -X GET  https://4zujkx78ef.execute-api.us-east-1.amazonaws.com/prod/lambda_function_2
+        env:
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: ASIATJX7AA2GI2KEBF2S
+          AWS_SECRET_ACCESS_KEY: 5VDZCns3xXsfaCvKjemM0QMWMCKM7xW62jIh05Md
