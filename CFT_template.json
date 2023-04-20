@@ -1,0 +1,98 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters" : {
+      "InstanceType" : {
+        "Type" : "String",
+        "Default" : "m5.xlarge"
+      },
+      "ReleaseLabel" : {
+        "Type" : "String",
+        "Default" : "emr-6.10.0"
+      },
+      "SubnetId" : {
+        "Type" : "String",
+        "Default" : "subnet-00bb7da91fb1c9d89"
+      },
+      "TerminationProtected" : {
+        "Type" : "String",
+        "Default" : "False"
+      },
+      "ElasticMapReducePrincipal" : {
+        "Type" : "String",
+        "Default" : "elasticmapreduce.amazonaws.com"
+      },
+      "Ec2Principal" : {
+        "Type" : "String",
+        "Default" : "ec2.amazonaws.com"
+      },
+      "KeyName": {
+        "Description": "Name of an existing EC2 KeyPair to enable SSH to the instances",
+        "Default" : "project_kk_key",
+        "Type": "String"
+      }
+    },
+    "Resources": {
+      "cluster": {
+        "Type": "AWS::EMR::Cluster",
+        "Properties": {
+          "Applications":[
+            {
+                "Name" : "Hadoop"
+            },
+            {
+                "Name" : "Hive"
+            },
+            {
+                "Name" : "Spark"
+            },
+            {
+                "Name" : "Zeppelin"
+            }
+          ],
+          "Instances": {
+            "Ec2KeyName": {
+                "Ref": "KeyName"
+            },
+            "MasterInstanceGroup": {
+              "InstanceCount": 1,
+              "InstanceType": {"Ref" : "InstanceType"},
+              "Market": "ON_DEMAND",
+              "Name": "cfnMaster"
+            },
+            "CoreInstanceGroup": {
+              "InstanceCount": 1,
+              "InstanceType": {"Ref" : "InstanceType"},
+              "Market": "ON_DEMAND",
+              "Name": "cfnCore"
+            },
+            "TerminationProtected" : {"Ref" : "TerminationProtected"},
+            "Ec2SubnetId" : {"Ref" : "SubnetId"}
+          },
+          "Name": "my cluster for emr cft testing",
+          "JobFlowRole" : "EMR_EC2_DefaultRole",
+          "ServiceRole" : "EMR_DefaultRole",
+          "ReleaseLabel" : {"Ref" : "ReleaseLabel"},
+          "VisibleToAllUsers" : true
+        }
+      },
+      "SparkStep": {
+        "Type": "AWS::EMR::Step",
+        "Properties": {
+            "Name": "SparkStep",
+            "ActionOnFailure": "CONTINUE",
+            "HadoopJarStep": {
+                "Jar": "command-runner.jar",
+                "Args": [
+                    "spark-submit",
+                    "--deploy-mode",
+                    "cluster",
+                    "s3://puttriggerlambda/TEMP_SCRIPT/final_null_filler.py"
+                ]  
+            },
+            "JobFlowId": {
+                "Ref": "cluster"
+            }            
+        }        
+      }
+    }
+  }
